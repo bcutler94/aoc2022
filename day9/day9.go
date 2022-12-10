@@ -8,12 +8,33 @@ import (
 	"strings"
 )
 
-type Coord struct {
+type Knot struct {
 	x, y int
+	knot *Knot
+	tail bool
 }
 
-func (c *Coord) ToKey() string {
+func (c *Knot) ToKey() string {
 	return strconv.Itoa(c.x) + "." + strconv.Itoa(c.y)
+}
+
+func BuildKnot() *Knot {
+	knot := new(Knot)
+	knot.x = 0
+	knot.y = 0
+	return knot
+}
+
+func BuildRope(count int) *Knot {
+	rope := BuildKnot()
+	currentKnot := rope
+	for i := 1; i < count; i++ {
+		knot := BuildKnot()
+		currentKnot.knot = knot
+		currentKnot = knot
+	}
+	currentKnot.tail = true
+	return rope
 }
 
 func main() {
@@ -26,8 +47,7 @@ func main() {
 	scanner.Split(bufio.ScanLines)
 
 	moves := map[string]int{ "0.0": 1 }
-	head := new(Coord)
-	tail := new(Coord)
+	rope := BuildRope(10)
 	for scanner.Scan() {
 		line := scanner.Text()
 
@@ -40,51 +60,60 @@ func main() {
 
 		for i := 1; i <= steps; i++ {
 
-			// fmt.Println(head.ToKey())
-			fmt.Println(tail.ToKey())
-
-
 			// Move head
 			switch arr[0] {
 			case "R":
-				head.x++
+				rope.x++
 			case "L":
-				head.x--
+				rope.x--
 			case "D":
-				head.y--
+				rope.y--
 			case "U":
-				head.y++
+				rope.y++
 			default:
 				panic("no move available")
 			}
-			
-			xDelta := head.x - tail.x
-			yDelta := head.y - tail.y
 
-			// Move tail
-			if xDelta == 2 {
-				tail.y = head.y
-				tail.x = head.x - 1
-			} else if xDelta == -2 {
-				tail.y = head.y
-				tail.x = head.x + 1
-			} else if yDelta == 2 {
-				tail.y = head.y - 1
-				tail.x = head.x
-			} else if yDelta == -2 {
-				tail.y = head.y + 1
-				tail.x = head.x
+			head := rope
+			tail := rope.knot
+
+			for {
+				if head.tail {
+					break
+				}
+
+				xDelta := head.x - tail.x
+				yDelta := head.y - tail.y
+	
+				// Move tail
+				if xDelta == 2 {
+					tail.y = head.y
+					tail.x = head.x - 1
+				} else if xDelta == -2 {
+					tail.y = head.y
+					tail.x = head.x + 1
+				} else if yDelta == 2 {
+					tail.y = head.y - 1
+					tail.x = head.x
+				} else if yDelta == -2 {
+					tail.y = head.y + 1
+					tail.x = head.x
+				}
+
+				head = tail
+				tail = head.knot
 			}
-
-			moves[tail.ToKey()]++
+			moves[head.ToKey()]++
 		}
-
 	}
-
 	fmt.Println(len(moves))
+
 	// 5519
 	// 5527
 	// 5523
+
+			// 2083
+		// 2259
 
 }
 
