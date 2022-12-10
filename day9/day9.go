@@ -3,11 +3,18 @@ package main
 import (
 	"bufio"
 	"fmt"
-	"math"
 	"os"
 	"strconv"
 	"strings"
 )
+
+type Coord struct {
+	x, y int
+}
+
+func (c *Coord) ToKey() string {
+	return strconv.Itoa(c.x) + "." + strconv.Itoa(c.y)
+}
 
 func main() {
 	fd, err := os.Open("./input.txt")
@@ -18,9 +25,9 @@ func main() {
 	scanner := bufio.NewScanner(fd)
 	scanner.Split(bufio.ScanLines)
 
-	grid := [][]int{{1}}
-	h := []int{0, 0}
-	t := []int{0, 0}
+	moves := map[string]int{ "0.0": 1 }
+	head := new(Coord)
+	tail := new(Coord)
 	for scanner.Scan() {
 		line := scanner.Text()
 
@@ -31,158 +38,191 @@ func main() {
 			panic(err)
 		}
 
-		switch arr[0] {
-		case "R":
-			MoveR(&grid, &h, &t, steps)
-		case "L":
-			MoveL(&grid, &h, &t, steps)
-		case "D":
-			MoveD(&grid, &h, &t, steps)
-		case "U":
-			MoveU(&grid, &h, &t, steps)
-		default:
-			panic("no move available")
+		for i := 1; i <= steps; i++ {
+
+			// fmt.Println(head.ToKey())
+			fmt.Println(tail.ToKey())
+
+
+			// Move head
+			switch arr[0] {
+			case "R":
+				head.x++
+			case "L":
+				head.x--
+			case "D":
+				head.y--
+			case "U":
+				head.y++
+			default:
+				panic("no move available")
+			}
+			
+			xDelta := head.x - tail.x
+			yDelta := head.y - tail.y
+
+			// Move tail
+			if xDelta == 2 {
+				tail.y = head.y
+				tail.x = head.x - 1
+			} else if xDelta == -2 {
+				tail.y = head.y
+				tail.x = head.x + 1
+			} else if yDelta == 2 {
+				tail.y = head.y - 1
+				tail.x = head.x
+			} else if yDelta == -2 {
+				tail.y = head.y + 1
+				tail.x = head.x
+			}
+
+			moves[tail.ToKey()]++
 		}
+
 	}
-	fmt.Println(CountMoves(&grid))
+
+	fmt.Println(len(moves))
 	// 5519
 	// 5527
 	// 5523
+
 }
 
-func PrintGrid(grid *[][]int) {
-	for j := range *grid {
-		fmt.Println((*grid)[len(*grid) - j - 1])
-	}
-}
+	// 5710
 
-func CountMoves(grid *[][]int) int {
-	count := 0
-	gridPointer := *grid
-	for j := range gridPointer {
-		for i := range gridPointer[j] {
-			if gridPointer[j][i] == 1 {
-				count++
-			}
-		}
-	}
-	return count
-}
+// func PrintGrid(grid *[][]int) {
+// 	for j := range *grid {
+// 		fmt.Println((*grid)[len(*grid) - j - 1])
+// 	}
+// }
 
-func FillGrid(grid *[][]int) {
-	maxI := 0
-	for j := range *grid {
-		if len((*grid)[j]) > maxI {
-			maxI = len((*grid)[j])
-		}
-	}
+// func CountMoves(grid *[][]int) int {
+// 	count := 0
+// 	gridPointer := *grid
+// 	for j := range gridPointer {
+// 		for i := range gridPointer[j] {
+// 			if gridPointer[j][i] == 1 {
+// 				count++
+// 			}
+// 		}
+// 	}
+// 	return count
+// }
+
+// func FillGrid(grid *[][]int) {
+// 	maxI := 0
+// 	for j := range *grid {
+// 		if len((*grid)[j]) > maxI {
+// 			maxI = len((*grid)[j])
+// 		}
+// 	}
 	
-	for j := range *grid {
-		diff := maxI - len((*grid)[j])
-		for i := 0; i < diff; i++ {
-			(*grid)[j] = append((*grid)[j], 0)
-		}
-	}
-}
+// 	for j := range *grid {
+// 		diff := maxI - len((*grid)[j])
+// 		for i := 0; i < diff; i++ {
+// 			(*grid)[j] = append((*grid)[j], 0)
+// 		}
+// 	}
+// }
 
-func AdjustTail(grid *[][]int, h, t *[]int) {
+// func AdjustTail(grid *[][]int, h, t *[]int) {
 
 
-	if math.Abs(float64((*h)[0]-(*t)[0])) <= 1 && math.Abs(float64((*h)[1]-(*t)[1])) <= 1 {
-		(*grid)[(*t)[1]][(*t)[0]] = 1
-	} else {
-		// if too far left
-		if (*h)[0]-(*t)[0] == 2 {
-			(*t)[1] = (*h)[1]
-			(*t)[0] = (*h)[0] - 1
-		}
+// 	if math.Abs(float64((*h)[0]-(*t)[0])) <= 1 && math.Abs(float64((*h)[1]-(*t)[1])) <= 1 {
+// 		(*grid)[(*t)[1]][(*t)[0]] = 1
+// 	} else {
+// 		// if too far left
+// 		if (*h)[0]-(*t)[0] == 2 {
+// 			(*t)[1] = (*h)[1]
+// 			(*t)[0] = (*h)[0] - 1
+// 		}
 	
-		// if too far right
-		if (*t)[0]-(*h)[0] == 2 {
-			(*t)[1] = (*h)[1]
-			(*t)[0] = (*h)[0] + 1
-		}
+// 		// if too far right
+// 		if (*t)[0]-(*h)[0] == 2 {
+// 			(*t)[1] = (*h)[1]
+// 			(*t)[0] = (*h)[0] + 1
+// 		}
 	
-		// if too high
-		if (*t)[1]-(*h)[1] == 2 {
-			(*t)[1] = (*h)[1] + 1
-			(*t)[0] = (*h)[0]
-		}
+// 		// if too high
+// 		if (*t)[1]-(*h)[1] == 2 {
+// 			(*t)[1] = (*h)[1] + 1
+// 			(*t)[0] = (*h)[0]
+// 		}
 	
-		// if too low
-		if (*h)[1]-(*t)[1] == 2 {
-			(*t)[1] = (*h)[1] - 1
-			(*t)[0] = (*h)[0]
-		}
+// 		// if too low
+// 		if (*h)[1]-(*t)[1] == 2 {
+// 			(*t)[1] = (*h)[1] - 1
+// 			(*t)[0] = (*h)[0]
+// 		}
 	
-		(*grid)[(*t)[1]][(*t)[0]] = 1
-	}
+// 		(*grid)[(*t)[1]][(*t)[0]] = 1
+// 	}
 
 
-}
+// }
 
-func MoveR(grid *[][]int, h, t *[]int, steps int) {
-	for i := 1; i <= steps; i++ {
-		// Move Head
-		length := len((*grid)[(*h)[1]])
-		if 1+(*h)[0] >= length {
-			(*grid)[(*h)[1]] = append((*grid)[(*h)[1]], 0)
-		} 
-		(*h)[0]++
-		AdjustTail(grid, h, t)
-		FillGrid(grid)
-	}
-}
+// func MoveR(grid *[][]int, h, t *[]int, steps int) {
+// 	for i := 1; i <= steps; i++ {
+// 		// Move Head
+// 		length := len((*grid)[(*h)[1]])
+// 		if 1+(*h)[0] >= length {
+// 			(*grid)[(*h)[1]] = append((*grid)[(*h)[1]], 0)
+// 		} 
+// 		(*h)[0]++
+// 		AdjustTail(grid, h, t)
+// 		FillGrid(grid)
+// 	}
+// }
 
-func MoveL(grid *[][]int, h, t *[]int, steps int) {
-	for i := 1; i <= steps; i++ {
-		// Move Head
-		if (*h)[0]-1 < 0 {
-			(*grid)[(*h)[1]] = append([]int{0}, (*grid)[(*h)[1]]...)
-			(*h)[0] = 0
-			(*t)[0]++
-		} else {
-			(*h)[0]--
-		}
-		AdjustTail(grid, h, t)
-		FillGrid(grid)
-	}
-}
+// func MoveL(grid *[][]int, h, t *[]int, steps int) {
+// 	for i := 1; i <= steps; i++ {
+// 		// Move Head
+// 		if (*h)[0]-1 < 0 {
+// 			(*grid)[(*h)[1]] = append([]int{0}, (*grid)[(*h)[1]]...)
+// 			(*h)[0] = 0
+// 			(*t)[0]++
+// 		} else {
+// 			(*h)[0]--
+// 		}
+// 		AdjustTail(grid, h, t)
+// 		FillGrid(grid)
+// 	}
+// }
 
-func MoveU(grid *[][]int, h, t *[]int, steps int) {
-	for i := 1; i <= steps; i++ {
-		// Move Head
-		length := len(*grid)
-		if 1+(*h)[1] >= length {
-			row := []int{}
-			for k := 0; k <= (*h)[0]; k++ {
-				row = append(row, 0)
-			}
-			(*grid) = append((*grid), row)
-		} 
-		(*h)[1]++
-		AdjustTail(grid, h, t)
-		FillGrid(grid)
-	}
-}
+// func MoveU(grid *[][]int, h, t *[]int, steps int) {
+// 	for i := 1; i <= steps; i++ {
+// 		// Move Head
+// 		length := len(*grid)
+// 		if 1+(*h)[1] >= length {
+// 			row := []int{}
+// 			for k := 0; k <= (*h)[0]; k++ {
+// 				row = append(row, 0)
+// 			}
+// 			(*grid) = append((*grid), row)
+// 		} 
+// 		(*h)[1]++
+// 		AdjustTail(grid, h, t)
+// 		FillGrid(grid)
+// 	}
+// }
 
-func MoveD(grid *[][]int, h, t *[]int, steps int) {
-	for i := 1; i <= steps; i++ {
-		// Move Head
-		if (*h)[1]-1 < 0 {
-			row := []int{}
-			for k := 0; k <= (*h)[0]; k++ {
-				row = append(row, 0)
-			}
-			(*grid) = append([][]int{row}, *grid...)
-			(*h)[1] = 0
-			(*t)[1]++
-		} else {
-			(*h)[1]--
-		}
-		AdjustTail(grid, h, t)
-		FillGrid(grid)
-	}
-}
+// func MoveD(grid *[][]int, h, t *[]int, steps int) {
+// 	for i := 1; i <= steps; i++ {
+// 		// Move Head
+// 		if (*h)[1]-1 < 0 {
+// 			row := []int{}
+// 			for k := 0; k <= (*h)[0]; k++ {
+// 				row = append(row, 0)
+// 			}
+// 			(*grid) = append([][]int{row}, *grid...)
+// 			(*h)[1] = 0
+// 			(*t)[1]++
+// 		} else {
+// 			(*h)[1]--
+// 		}
+// 		AdjustTail(grid, h, t)
+// 		FillGrid(grid)
+// 	}
+// }
 
 
