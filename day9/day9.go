@@ -28,10 +28,10 @@ func BuildKnot() *Knot {
 func BuildRope(count int) *Knot {
 	rope := BuildKnot()
 	currentKnot := rope
-	for i := 1; i < count; i++ {
-		knot := BuildKnot()
-		currentKnot.knot = knot
-		currentKnot = knot
+	for i := 1; i <= count; i++ {
+		currentKnot.knot = BuildKnot()
+		currentKnot = currentKnot.knot
+		currentKnot.tail = false
 	}
 	currentKnot.tail = true
 	return rope
@@ -47,7 +47,9 @@ func main() {
 	scanner.Split(bufio.ScanLines)
 
 	moves := map[string]int{ "0.0": 1 }
-	rope := BuildRope(10)
+	rope := BuildRope(9)
+
+	
 	for scanner.Scan() {
 		line := scanner.Text()
 
